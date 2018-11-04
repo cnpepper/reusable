@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -11,17 +9,36 @@ use Illuminate\Http\Request;
 | routes are loaded by the RouteServiceProvider within a group which
 | is assigned the "api" middleware group. Enjoy building your API!
 |
-*/
+ */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-// API路由
 $api = app('Dingo\Api\Routing\Router');
-$api->version('v1',function($api){
-    $api->get('dingo',function(){
-        return 'hello! dingo!';
+
+// dingo可以控制版本 但是发现好像加不了前缀
+$api->version('v1', function ($api) {
+    /**
+     * 不需要验证的api
+     */
+    $api->group(['middleware' => ['cors']], function ($api) {
+        /**
+         * User 用户接口
+         */
+        $api->group(['prefix'=>'user'],function($api){
+            //$api->post('user_register', 'App\Http\Controllers\Api\LoginController@register'); 暂时没实现
+            $api->post('login', 'App\Http\Controllers\Api\User\LoginController@index'); 
+        });
     });
-    //$api->get('user',"App\Http\Controllers\UserController@index");//必须完整命名空间
+
+    /**
+     * 需要验证的api
+     */
+    $api->group(['middleware' => ['auth:api', 'cors']], function ($api) {
+        /**
+         * test 测试接口
+         */
+        $api->group(['prefix'=>'test'],function($api){
+            $api->post('query','App\Http\Controllers\Api\Test\QueryController@index');
+        });
+    });
 });
+
+
